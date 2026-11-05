@@ -3,9 +3,9 @@
 export const CATEGORIES = [
   { id: 'principal',  name: '校長',     icon: '校', color: '#1f4e8c' },
   { id: 'academic',   name: '教導處',   icon: '教', color: '#2d7dd2' },
+  { id: 'counseling', name: '教務組',   icon: '務', color: '#d94f8a' },
   { id: 'student',    name: '訓導組',   icon: '訓', color: '#2a9d5c' },
   { id: 'general',    name: '總務處',   icon: '總', color: '#e08a1e' },
-  { id: 'counseling', name: '教務組',   icon: '務', color: '#d94f8a' },
   { id: 'personnel',  name: '人事會計', icon: '人', color: '#6c4bc4' },
   { id: 'homeroom',   name: '導師',     icon: '導', color: '#e4572e' },
   { id: 'subject',    name: '科任',     icon: '科', color: '#0f9ea8' },

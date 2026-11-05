@@ -4,8 +4,8 @@ import { CATEGORIES, getCategory } from '../js/categories.js';
 
 test('categories: 12 fixed in spec order', () => {
   assert.deepEqual(CATEGORIES.map(c => c.name),
-    ['校長','教導處','訓導組','總務處','教務組','人事會計','導師','科任','教學','附幼','學扶','其他']);
-  assert.deepEqual(CATEGORIES.map(c => c.icon), ['校','教','訓','總','務','人','導','科','課','幼','扶','其']);
+    ['校長','教導處','教務組','訓導組','總務處','人事會計','導師','科任','教學','附幼','學扶','其他']);
+  assert.deepEqual(CATEGORIES.map(c => c.icon), ['校','教','務','訓','總','人','導','科','課','幼','扶','其']);
   assert.equal(new Set(CATEGORIES.map(c => c.icon)).size, 12);
   assert.equal(new Set(CATEGORIES.map(c => c.id)).size, 12);
   assert.equal(new Set(CATEGORIES.map(c => c.color)).size, 12);
