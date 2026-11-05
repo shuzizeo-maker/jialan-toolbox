@@ -2,6 +2,7 @@
 import { h, mount } from './dom.js';
 import { getCategory } from './categories.js';
 import { friendlyError } from './firebase.js';
+import { indexUrl } from './errors.js';
 
 /** 論壇式區塊：斜角標題 + 內容 */
 export function panel(title, opts = {}, ...children) {
@@ -27,7 +28,9 @@ export function loadingBox() { return h('p', { class: 'muted loading' }, '載入
 
 export function errorBox(err, retry) {
   console.warn(err);
+  const url = indexUrl(err);
   return h('div', { class: 'error-box' }, friendlyError(err),
+    url ? h('a', { class: 'btn btn-small btn-primary', href: url, target: '_blank', rel: 'noopener noreferrer' }, '建立索引') : null,
     retry ? h('button', { class: 'btn btn-small', onclick: retry }, '重新整理') : null);
 }
 

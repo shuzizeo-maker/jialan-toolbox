@@ -31,12 +31,6 @@ if (ready) {
 }
 export { app, auth, db };
 
+import { describeError } from './errors.js';
 /** 把 Firestore 錯誤轉成給人看的訊息 */
-export function friendlyError(err) {
-  const code = err?.code ?? '';
-  if (code.includes('permission-denied')) return '沒有權限讀取這些資料。';
-  if (code.includes('resource-exhausted')) return '今日使用量已達上限，明天自動恢復。';
-  if (code.includes('unavailable') || code.includes('deadline')) return '暫時無法連線，請稍後再試。';
-  if (!ready) return '網站尚未完成 Firebase 設定。';
-  return '暫時無法載入，請稍後再試。';
-}
+export function friendlyError(err) { return describeError(err, ready); }

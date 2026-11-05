@@ -207,3 +207,15 @@ test('firestore indexes include collection-group single-field index for versions
   const o = cfg.fieldOverrides.find(f => f.collectionGroup === 'versions' && f.fieldPath === 'toolStatus');
   assert.ok(o && o.indexes.some(i => i.queryScope === 'COLLECTION_GROUP' && i.order === 'ASCENDING'));
 });
+
+import { indexUrl, describeError } from '../js/errors.js';
+test('indexUrl extracts the console link from a missing-index error', () => {
+  const err = { code: 'failed-precondition', message: 'The query requires an index. You can create it here: https://console.firebase.google.com/v1/r/project/jialan-toolbox/firestore/indexes?create_composite=Abc123 more' };
+  assert.equal(indexUrl(err), 'https://console.firebase.google.com/v1/r/project/jialan-toolbox/firestore/indexes?create_composite=Abc123');
+  assert.equal(indexUrl({ code: 'failed-precondition', message: 'see https://evil.example.com/x' }), null);
+  assert.equal(indexUrl({ code: 'permission-denied', message: '' }), null);
+  assert.match(describeError(err, true), /索引/);
+  assert.match(describeError({ code: 'resource-exhausted' }, true), /明天/);
+  assert.match(describeError({ code: 'permission-denied' }, true), /權限/);
+  assert.match(describeError({}, false), /設定/);
+});
