@@ -76,7 +76,7 @@ function banner() {
       h('span', { class: 'logo' }, h('img', { src: './assets/logo.png', alt: '嘉蘭國小校徽', width: '64', height: '64' })),
       h('span', { class: 'brand-text' },
         h('strong', '嘉蘭國小教學行政工具庫'),
-        h('small', '好用的工具大家分享，準時下班不是夢'))),
+        h('small', '好工具大家分享，下班追劇不是夢'))),
     h('div', { class: 'top-tabs', id: 'top-tabs' }),
     h('div', { class: 'fs-switch' }, h('span', '字級'),
       ...[['s', '小'], ['m', '中'], ['l', '大']].map(([k, t]) =>
