@@ -89,3 +89,50 @@ test('bundled holiday files parse', () => {
     assert.ok(l.every(h => h.date.startsWith(String(y))));
   }
 });
+
+import { CARDS, ELEMENTS, RARITIES, DAILY } from '../js/luckcard/pool.js';
+import { drawCard, getGuestId, hashString, mulberry32 } from '../js/luckcard/draw.js';
+
+test('pool integrity', () => {
+  assert.equal(CARDS.length, 60);
+  assert.deepEqual(CARDS.map(c => c.no), Array.from({length:60}, (_, i) => i + 1));
+  for (const r of RARITIES) assert.equal(CARDS.filter(c => c.rarity === r.id).length, r.count, r.id);
+  const hp = { N:[50,90], R:[80,110], SR:[100,140], SSR:[130,170], UR:[180,220] };
+  for (const c of CARDS) {
+    assert.equal(c.skills.length, 2, c.name);
+    assert.ok(c.skills.every(s => s.cost >= 1 && s.cost <= 3 && s.name && s.desc), c.name);
+    assert.ok(ELEMENTS.some(e => e.id === c.element), c.name);
+    assert.ok(c.hp >= hp[c.rarity][0] && c.hp <= hp[c.rarity][1], c.name);
+    assert.ok(c.emoji && c.quote && c.name);
+  }
+  assert.equal(new Set(CARDS.map(c => c.name)).size, 60);
+  assert.deepEqual(ELEMENTS.map(e => e.name), ['行政系','教學系','輔導系','總務系','體育系','藝文系']);
+  assert.ok(DAILY.yi.length >= 20 && DAILY.ji.length >= 20 && DAILY.colors.length >= 8);
+});
+test('hash and prng are stable', () => {
+  assert.equal(hashString('abc'), hashString('abc'));
+  assert.notEqual(hashString('abc'), hashString('abd'));
+  const r = mulberry32(1); const v = r(); assert.ok(v >= 0 && v < 1);
+  assert.equal(mulberry32(1)(), v);
+});
+test('drawCard deterministic per date+identity', () => {
+  assert.deepEqual(drawCard('20261105', 'u1'), drawCard('20261105', 'u1'));
+  const ids = new Set(Array.from({length:30}, (_, i) => drawCard(`202611${String(i+1).padStart(2,'0')}`, 'u1').card.no));
+  assert.ok(ids.size > 10);
+});
+test('rarity distribution within 1%', () => {
+  const n = 100000, cnt = {};
+  for (let i = 0; i < n; i++) { const r = drawCard('20261105', 'id' + i).card.rarity; cnt[r] = (cnt[r] || 0) + 1; }
+  for (const r of RARITIES) assert.ok(Math.abs(cnt[r.id] / n * 100 - r.weight) < 1, r.id);
+});
+test('daily yi != ji, luckyCategory valid', () => {
+  for (let i = 0; i < 500; i++) { const d = drawCard('20261105', 'x' + i).daily;
+    assert.notEqual(d.yi, d.ji); assert.ok(CATEGORIES.some(c => c.id === d.luckyCategory));
+    assert.ok(d.luckyNumber >= 1 && d.luckyNumber <= 99); assert.ok(d.luckyColor.hex); }
+});
+test('getGuestId survives throwing storage', () => {
+  assert.equal(getGuestId({ getItem(){ throw 1; }, setItem(){ throw 1; } }), 'guest');
+  const m = new Map(), s = { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) };
+  assert.equal(getGuestId(s), getGuestId(s));
+  assert.notEqual(getGuestId(s), 'guest');
+});
