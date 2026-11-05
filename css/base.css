@@ -212,3 +212,6 @@ table.rank td.likes { text-align: right; color: var(--danger); font-weight: 700;
 .dialog-card { max-width: min(360px, calc(100vw - 32px)); text-align: center; }
 .dialog-card .lc { margin: .6rem auto; }
 .help-list li { border-left: 3px solid var(--accent); padding-left: .5rem; margin-bottom: .3rem; }
+.form label.inline { display: flex; align-items: center; gap: .3rem; font-weight: 400; }
+.form label.inline input { width: auto; }
+.row-actions select { font: inherit; padding: .15rem .3rem; max-width: 100%; }
