@@ -1,0 +1,196 @@
+rules_version = '2';
+// 嘉蘭國小教學行政工具庫：所有權限以此檔為準（前端的隱藏/停用只是使用體驗）
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- 共用函式 ----------
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function userPath(u) { return /databases/$(database)/documents/users/$(u); }
+    function me() { return get(userPath(uid())).data; }
+    function hasProfile() { return signedIn() && exists(userPath(uid())); }
+    function isMember() { return hasProfile() && me().status == 'approved'; }
+    function isAdmin() { return isMember() && me().role == 'admin'; }
+
+    function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function newData() { return request.resource.data; }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    function pad2(n) { return n < 10 ? '0' + string(n) : string(n); }
+    function taipeiKey() {
+      let t = request.time + duration.value(8, 'h');
+      return string(t.year()) + pad2(t.month()) + pad2(t.day());
+    }
+
+    function validCategory(c) {
+      return c in ['principal', 'academic', 'student', 'general', 'counseling', 'personnel',
+                   'homeroom', 'subject', 'teaching', 'preschool', 'extension', 'other'];
+    }
+    function optUrl(v) { return v is string && (v == '' || (v.size() <= 500 && v.matches('^https://[^\\s]+$'))); }
+
+    // ---------- 使用者 ----------
+    function validProfile(d) {
+      return str(d.county, 2, 4) && str(d.school, 1, 30) && str(d.realName, 1, 20)
+        && d.jobTitle in ['校長', '主任', '組長', '教師', '職員'];
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (uid() == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if signedIn() && uid() == userId
+        && newData().keys().hasOnly(['county', 'school', 'realName', 'jobTitle', 'email', 'displayName',
+                                     'status', 'role', 'createdAt', 'updatedAt'])
+        && newData().status == 'pending' && newData().role == 'user'
+        && validProfile(newData());
+      allow update: if
+        (signedIn() && uid() == userId
+          && changed().hasOnly(['county', 'school', 'realName', 'jobTitle', 'displayName', 'updatedAt'])
+          && validProfile(newData()))
+        || (isAdmin()
+          && changed().hasOnly(['status', 'role', 'updatedAt'])
+          && newData().status in ['pending', 'approved', 'suspended']
+          && newData().role in ['user', 'admin']);
+      allow delete: if isAdmin();
+
+      match /favorites/{toolId} {
+        allow read: if signedIn() && uid() == userId;
+        allow create: if isMember() && uid() == userId && newData().keys().hasOnly(['createdAt']);
+        allow delete: if signedIn() && uid() == userId;
+      }
+
+      match /cards/{dateKey} {
+        allow read: if signedIn() && uid() == userId;
+        allow create: if isMember() && uid() == userId && dateKey == taipeiKey()
+          && newData().keys().hasOnly(['cardNo', 'rarity', 'createdAt'])
+          && newData().cardNo is int && newData().cardNo >= 1 && newData().cardNo <= 60
+          && newData().rarity in ['N', 'R', 'SR', 'SSR', 'UR'];
+      }
+    }
+
+    // ---------- 工具 ----------
+    function toolPath(id) { return /databases/$(database)/documents/tools/$(id); }
+    function validTool(d) {
+      return str(d.name, 1, 60) && str(d.summary, 1, 300) && validCategory(d.category)
+        && str(d.author, 1, 30) && d.authorGithub is string
+        && (d.authorGithub == '' || d.authorGithub.matches('^[A-Za-z0-9-]{1,39}$'));
+    }
+    // 上傳者（且為會員）或管理員；用 getAfter 讓「同一批次建立工具」也成立
+    function canEditToolAfter(id) {
+      return isAdmin() || (isMember() && getAfter(toolPath(id)).data.uploaderUid == uid());
+    }
+    function canReadTool(t) {
+      return t.status == 'published' || isAdmin() || (signedIn() && t.uploaderUid == uid());
+    }
+
+    match /tools/{toolId} {
+      allow read: if canReadTool(resource.data);
+      allow create: if isMember()
+        && newData().keys().hasOnly(['name', 'summary', 'category', 'author', 'authorGithub', 'uploaderUid',
+                                     'status', 'likeCount', 'currentVersion', 'createdAt', 'updatedAt'])
+        && newData().uploaderUid == uid() && newData().status == 'pending'
+        && newData().likeCount == 0 && newData().currentVersion == 1
+        && validTool(newData());
+      allow update: if
+        // 內容修改／新增版本：上傳者或管理員
+        ((isAdmin() || (isMember() && resource.data.uploaderUid == uid()))
+          && changed().hasOnly(['name', 'summary', 'category', 'author', 'authorGithub', 'currentVersion', 'updatedAt'])
+          && (newData().currentVersion == resource.data.currentVersion
+              || newData().currentVersion == resource.data.currentVersion + 1)
+          && validTool(newData()))
+        // 發布／退回待審：只有管理員
+        || (isAdmin() && changed().hasOnly(['status', 'updatedAt'])
+          && newData().status in ['pending', 'published'])
+        // 按讚計數：必須與 likes/{uid} 的建立或刪除成對
+        || (isMember() && changed().hasOnly(['likeCount']) && likePaired(toolId));
+      allow delete: if isAdmin();
+
+      function likePath() { return /databases/$(database)/documents/tools/$(toolId)/likes/$(uid()); }
+      function likePaired(id) {
+        return (newData().likeCount == resource.data.likeCount + 1 && !exists(likePath()) && existsAfter(likePath()))
+          || (newData().likeCount == resource.data.likeCount - 1 && exists(likePath()) && !existsAfter(likePath()));
+      }
+
+      match /private/{docId} {
+        allow read: if docId == 'links'
+          && (isAdmin() || (isMember() && canReadTool(get(toolPath(toolId)).data)));
+        allow create, update: if docId == 'links' && canEditToolAfter(toolId)
+          && newData().keys().hasOnly(['onlineUrl', 'downloadUrl', 'sourceUrl'])
+          && optUrl(newData().get('onlineUrl', '')) && optUrl(newData().get('downloadUrl', ''))
+          && optUrl(newData().get('sourceUrl', ''))
+          && (newData().get('onlineUrl', '') != '' || newData().get('downloadUrl', '') != ''
+              || newData().get('sourceUrl', '') != '');
+        allow delete: if isAdmin();
+      }
+
+      match /versions/{vid} {
+        allow read: if isAdmin() || (signedIn() && get(toolPath(toolId)).data.uploaderUid == uid());
+        allow create: if canEditToolAfter(toolId)
+          && newData().keys().hasOnly(['version', 'note', 'createdAt', 'byUid', 'toolName', 'category', 'toolStatus'])
+          && newData().byUid == uid()
+          && newData().version == getAfter(toolPath(toolId)).data.currentVersion
+          && vid == 'v' + string(newData().version)
+          && newData().toolStatus == getAfter(toolPath(toolId)).data.status
+          && str(newData().note, 1, 200) && str(newData().toolName, 1, 60) && validCategory(newData().category);
+        allow update: if isAdmin() && changed().hasOnly(['toolStatus', 'toolName', 'category']);
+        allow delete: if isAdmin();
+      }
+
+      match /likes/{likerId} {
+        allow read: if signedIn() && uid() == likerId;
+        allow create: if isMember() && uid() == likerId
+          && newData().keys().hasOnly(['createdAt'])
+          && getAfter(toolPath(toolId)).data.likeCount == get(toolPath(toolId)).data.likeCount + 1;
+        allow delete: if isMember() && uid() == likerId
+          && getAfter(toolPath(toolId)).data.likeCount == get(toolPath(toolId)).data.likeCount - 1;
+      }
+    }
+
+    // 主畫面「最新修正」的 collectionGroup 查詢：公開工具的版本所有人可讀
+    match /{path=**}/versions/{vid} {
+      allow read: if resource.data.toolStatus == 'published';
+    }
+
+    // ---------- 許願池 ----------
+    function wishPath(id) { return /databases/$(database)/documents/wishes/$(id); }
+    match /wishes/{wishId} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && newData().keys().hasOnly(['title', 'detail', 'category', 'byUid', 'byName', 'voteCount', 'status', 'doneToolId', 'createdAt'])
+        && newData().byUid == uid() && newData().voteCount == 0 && newData().status == 'open'
+        && newData().doneToolId == null
+        && str(newData().title, 1, 60) && str(newData().detail, 0, 500) && str(newData().byName, 1, 20)
+        && validCategory(newData().category);
+      allow update: if
+        (isAdmin() && changed().hasOnly(['status', 'doneToolId'])
+          && newData().status in ['open', 'done']
+          && (newData().doneToolId == null || newData().doneToolId is string))
+        || (isMember() && changed().hasOnly(['voteCount']) && votePaired());
+      allow delete: if isAdmin();
+
+      function votePath() { return /databases/$(database)/documents/wishes/$(wishId)/votes/$(uid()); }
+      function votePaired() {
+        return (newData().voteCount == resource.data.voteCount + 1 && !exists(votePath()) && existsAfter(votePath()))
+          || (newData().voteCount == resource.data.voteCount - 1 && exists(votePath()) && !existsAfter(votePath()));
+      }
+
+      match /votes/{voterId} {
+        allow read: if signedIn() && uid() == voterId;
+        allow create: if isMember() && uid() == voterId
+          && newData().keys().hasOnly(['createdAt'])
+          && getAfter(wishPath(wishId)).data.voteCount == get(wishPath(wishId)).data.voteCount + 1;
+        allow delete: if isMember() && uid() == voterId
+          && getAfter(wishPath(wishId)).data.voteCount == get(wishPath(wishId)).data.voteCount - 1;
+      }
+    }
+
+    // ---------- 公告與統計 ----------
+    match /announcements/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /stats/{id} {
+      allow read: if true;
+      allow write: if isAdmin() && id == 'site';
+    }
+  }
+}
