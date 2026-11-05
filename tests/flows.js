@@ -129,6 +129,54 @@ flows.uploadFlow = async (b) => {
   for (const p of [u, a]) assert.deepEqual(p.errors, []);
 };
 
+flows.wishFlow = async (b) => {
+  const a = await newPage(b);
+  await open(a, 'wishes.html', 'alice@example.com');
+  await a.fill('[name=title]', '自動排代課表２');
+  await a.selectOption('[name=category]', 'academic');
+  await a.click('button[type=submit]');
+  const row = a.locator('.wish-row', { hasText: '自動排代課表２' });
+  await row.waitFor();
+
+  const o = await newPage(b);
+  await open(o, 'wishes.html', 'bob@example.com');
+  const r2 = o.locator('.wish-row', { hasText: '自動排代課表２' });
+  await r2.waitFor();
+  const btn = r2.locator('.btn-vote');
+  await btn.click();
+  await o.waitForFunction(() => [...document.querySelectorAll('.btn-vote')].some(b => b.getAttribute('aria-pressed') === 'true' && !b.disabled));
+  await btn.click();
+  await o.waitForFunction(() => ![...document.querySelectorAll('.btn-vote')].some(b => b.disabled));
+  await btn.click();
+  await o.waitForFunction(() => [...document.querySelectorAll('.btn-vote')].some(b => b.getAttribute('aria-pressed') === 'true' && !b.disabled));
+  await o.reload();
+  await r2.waitFor();
+  assert.match(await r2.locator('.vote-count').textContent(), /^1$/);
+
+  const ad = await newPage(b);
+  ad.on('dialog', d => d.accept());
+  await open(ad, 'admin.html#wishes', 'admin@example.com');
+  const card = ad.locator('.admin-card', { hasText: '自動排代課表２' });
+  await card.waitFor();
+  await card.locator('select').selectOption('notice');
+  await card.locator('button', { hasText: '標記已實現' }).click();
+  await ad.waitForFunction(() => [...document.querySelectorAll('.admin-card')].some(c => c.textContent.includes('自動排代課表２') && c.textContent.includes('已實現')));
+
+  await a.goto(`${BASE}/wishes.html?status=done`);
+  const done = a.locator('.wish-row', { hasText: '自動排代課表２' });
+  await done.waitFor();
+  assert.equal(await done.locator('a[href="tool.html?id=notice"]').count(), 1);
+
+  await a.goto(`${BASE}/index.html`);
+  await a.waitForSelector('.lc-overlay');
+  await a.waitForTimeout(1000);
+  await a.goto(`${BASE}/cards.html`);
+  await a.waitForSelector('.album-grid');
+  assert.match(await a.textContent('.album-progress'), /已收集 1 \/ 60/);
+  assert.equal(await a.locator('.album-cell.owned').count(), 1);
+  for (const p of [a, o, ad]) assert.deepEqual(p.errors, []);
+};
+
 const name = process.argv[2] ?? 'all';
 const list = name === 'all' ? Object.keys(flows) : [name];
 const b = await launch();

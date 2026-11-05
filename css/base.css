@@ -216,3 +216,24 @@ table.rank td.likes { text-align: right; color: var(--danger); font-weight: 700;
 .form label.inline input { width: auto; }
 .row-actions select { font: inherit; padding: .15rem .3rem; max-width: 100%; }
 .center { text-align: center; }
+
+/* ---------- 許願池 ---------- */
+.wish-row { display: flex; justify-content: space-between; gap: .8rem; align-items: flex-start; padding: .6rem 0; border-bottom: 1px dotted var(--line); }
+.wish-row p { margin: .15rem 0; }
+.wish-main { min-width: 0; }
+.btn-vote { white-space: nowrap; }
+
+/* ---------- 卡冊 ---------- */
+.album-progress b { color: var(--accent-dark); font-size: 1.4rem; }
+.progress { height: .7rem; background: #e3e8ef; border-radius: 999px; overflow: hidden; margin: .3rem 0 .6rem; }
+.progress span { display: block; height: 100%; background: linear-gradient(90deg, #f6a54c, #e8892b); }
+.rarity-stats { display: flex; gap: .4rem; flex-wrap: wrap; }
+.rs { border-radius: 3px; padding: 0 .45rem; font-size: .85rem; font-weight: 700; background: #e9eef5; }
+.rs-SR { background: #fff1b8; } .rs-SSR, .rs-UR { background: linear-gradient(90deg, #ffd6d6, #fff3b0, #d4f5dc, #d6e6ff); }
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .8rem; justify-items: center; margin-top: .8rem; }
+.album-cell { position: relative; background: none; border: 0; padding: 0; }
+.album-cell.owned { cursor: pointer; }
+.album-cell.owned:hover .lc { transform: translateY(-3px); }
+.album-cell .lc { transition: transform .2s; }
+.album-count { position: absolute; top: -6px; right: -6px; background: var(--danger); color: #fff; border-radius: 999px; padding: 0 .4rem; font-size: .8rem; font-weight: 700; }
+@media (max-width: 768px) { .album-grid { grid-template-columns: repeat(2, 1fr); } .wish-row { flex-direction: column; } }

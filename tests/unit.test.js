@@ -179,3 +179,18 @@ test('filterByKeyword', () => {
   assert.equal(filterByKeyword(items, '').length, 2);
   assert.equal(filterByKeyword(items, null).length, 2);
 });
+
+import { buildAlbum } from '../js/luckcard/album.js';
+test('buildAlbum', () => {
+  const docs = [{id:'20261101', cardNo:3}, {id:'20261102', cardNo:3}, {id:'20261103', cardNo:60}];
+  const a = buildAlbum(docs);
+  assert.equal(a.ownedCount, 2);
+  assert.equal(a.total, 60);
+  assert.equal(a.owned.get(3).count, 2);
+  assert.equal(a.owned.get(3).first, '20261101');
+  assert.equal(a.owned.get(3).last, '20261102');
+  assert.equal(a.recent[0].dateKey, '20261103');
+  assert.equal(Object.values(a.byRarity).reduce((s, r) => s + r.total, 0), 60);
+  assert.equal(a.byRarity.UR.owned, 1);
+  assert.equal(buildAlbum([]).ownedCount, 0);
+});

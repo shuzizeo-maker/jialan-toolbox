@@ -11,6 +11,6 @@ export async function saveTodayCard(uid, dateKey, card) {
 }
 
 export async function listMyCards(uid, n = 400) {
-  const snap = await getDocs(query(collection(db, 'users', uid, 'cards'), orderBy('__name__', 'desc'), limit(n)));
+  const snap = await getDocs(query(collection(db, 'users', uid, 'cards'), orderBy('createdAt', 'desc'), limit(n)));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
