@@ -220,3 +220,21 @@ test('indexUrl extracts the console link from a missing-index error', () => {
   assert.match(describeError({ code: 'permission-denied' }, true), /權限/);
   assert.match(describeError({}, false), /設定/);
 });
+
+import { QUOTES, dailyQuote } from '../js/quotes.js';
+test('dailyQuote: same all day, changes daily, no repeat within a cycle', () => {
+  assert.ok(QUOTES.length >= 60);
+  assert.equal(new Set(QUOTES).size, QUOTES.length);
+  for (const q of QUOTES) assert.ok([...q].length <= 20, q);
+  assert.equal(dailyQuote('20261105'), dailyQuote('20261105'));
+  assert.notEqual(dailyQuote('20261105'), dailyQuote('20261106'));
+  const seen = new Set();
+  let d = new Date(Date.UTC(2026, 10, 5));
+  for (let i = 0; i < QUOTES.length; i++) {
+    const key = d.toISOString().slice(0, 10).replaceAll('-', '');
+    seen.add(dailyQuote(key));
+    d = new Date(d.getTime() + 86400000);
+  }
+  assert.equal(seen.size, QUOTES.length);
+  assert.ok(QUOTES.includes('好工具大家分享，下班追劇不是夢'));
+});
