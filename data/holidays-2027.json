@@ -1,0 +1,98 @@
+[
+ {
+  "date": "20270101",
+  "week": "五",
+  "isHoliday": true,
+  "description": "開國紀念日"
+ },
+ {
+  "date": "20270204",
+  "week": "四",
+  "isHoliday": true,
+  "description": "小年夜"
+ },
+ {
+  "date": "20270205",
+  "week": "五",
+  "isHoliday": true,
+  "description": "農曆除夕"
+ },
+ {
+  "date": "20270206",
+  "week": "六",
+  "isHoliday": true,
+  "description": "春節"
+ },
+ {
+  "date": "20270207",
+  "week": "日",
+  "isHoliday": true,
+  "description": "春節"
+ },
+ {
+  "date": "20270208",
+  "week": "一",
+  "isHoliday": true,
+  "description": "春節"
+ },
+ {
+  "date": "20270228",
+  "week": "日",
+  "isHoliday": true,
+  "description": "和平紀念日"
+ },
+ {
+  "date": "20270404",
+  "week": "日",
+  "isHoliday": true,
+  "description": "兒童節"
+ },
+ {
+  "date": "20270405",
+  "week": "一",
+  "isHoliday": true,
+  "description": "清明節"
+ },
+ {
+  "date": "20270501",
+  "week": "六",
+  "isHoliday": true,
+  "description": "勞動節"
+ },
+ {
+  "date": "20270609",
+  "week": "三",
+  "isHoliday": true,
+  "description": "端午節"
+ },
+ {
+  "date": "20270915",
+  "week": "三",
+  "isHoliday": true,
+  "description": "中秋節"
+ },
+ {
+  "date": "20270928",
+  "week": "二",
+  "isHoliday": true,
+  "description": "教師節"
+ },
+ {
+  "date": "20271010",
+  "week": "日",
+  "isHoliday": true,
+  "description": "國慶日"
+ },
+ {
+  "date": "20271025",
+  "week": "一",
+  "isHoliday": true,
+  "description": "臺灣光復暨金門古寧頭大捷紀念日"
+ },
+ {
+  "date": "20271225",
+  "week": "六",
+  "isHoliday": true,
+  "description": "行憲紀念日"
+ }
+]

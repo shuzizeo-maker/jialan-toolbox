@@ -52,3 +52,40 @@ test('validateWish', () => {
   assert.ok(validateWish({title:'成績系統', detail:'', category:'academic'}).ok);
   assert.ok(validateWish({title:'', detail:'', category:'academic'}).errors.title);
 });
+
+import { parseCalendar, holidayStatus, loadHolidays } from '../js/holidays.js';
+import { readFileSync } from 'node:fs';
+const sample = [
+  {date:'20261009', week:'五', isHoliday:true, description:'國慶日補假'},
+  {date:'20261010', week:'六', isHoliday:true, description:'國慶日'},
+  {date:'20261011', week:'日', isHoliday:true, description:''},
+  {date:'20261225', week:'五', isHoliday:true, description:'行憲紀念日'},
+];
+test('parseCalendar drops plain weekends', () => {
+  assert.deepEqual(parseCalendar(sample).map(h => h.date), ['20261009','20261010','20261225']);
+  assert.throws(() => parseCalendar({}));
+});
+test('holidayStatus', () => {
+  const l = parseCalendar(sample);
+  const s = holidayStatus(l, '20261010');
+  assert.equal(s.today.name, '國慶日');
+  assert.equal(s.next.name, '行憲紀念日');
+  assert.equal(holidayStatus(l, '20261105').daysUntil, 50);
+  assert.equal(holidayStatus(l, '20261226').next, null);
+  assert.equal(holidayStatus(l, '20261001').upcoming.length, 3);
+});
+test('loadHolidays falls back on CDN failure and bad JSON', async () => {
+  const fallback = [{date:'20270101', week:'五', isHoliday:true, description:'開國紀念日'}];
+  const mk = (cdn) => async (url) => url.startsWith('https://cdn') ? cdn()
+    : { ok: true, json: async () => fallback };
+  for (const cdn of [() => { throw new Error('blocked'); }, async () => ({ ok:false }), async () => ({ ok:true, json: async () => ({oops:1}) })])
+    assert.equal((await loadHolidays(2027, mk(cdn)))[0].name, '開國紀念日');
+  assert.deepEqual(await loadHolidays(2027, async () => { throw new Error('x'); }), []);
+});
+test('bundled holiday files parse', () => {
+  for (const y of [2026, 2027]) {
+    const l = parseCalendar(JSON.parse(readFileSync(new URL(`../data/holidays-${y}.json`, import.meta.url))));
+    assert.ok(l.length >= 8, String(y));
+    assert.ok(l.every(h => h.date.startsWith(String(y))));
+  }
+});
