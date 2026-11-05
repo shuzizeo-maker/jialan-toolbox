@@ -196,9 +196,19 @@ table.rank td.likes { text-align: right; color: var(--danger); font-weight: 700;
   .layout { grid-template-columns: minmax(0, 1fr); padding: .8rem 16px; }
   .sidebar { display: none; }
   body.side-open .sidebar { display: flex; }
-  .home-right { order: -1; }
+  .home-grid { display: flex; flex-direction: column; align-items: stretch; }
+  .home-center, .home-right { display: contents; }
+  .o-luck { order: 1; } .o-latest { order: 2; } .o-rank { order: 3; } .o-anns { order: 4; }
+  .o-stats { order: 5; } .o-hol { order: 6; } .o-help { order: 7; }
   .tool-row { grid-template-columns: auto minmax(0, 1fr); }
   .tool-row .t-side { grid-column: 2; text-align: left; }
   .tool-row .t-sum { grid-column: 1 / 3; }
   table.rank .col-cat { display: none; }
 }
+
+/* ---------- 主畫面補充 ---------- */
+.lc-mini-text { font-size: .92rem; line-height: 1.5; }
+.link-like { color: var(--link); }
+.dialog-card { max-width: min(360px, calc(100vw - 32px)); text-align: center; }
+.dialog-card .lc { margin: .6rem auto; }
+.help-list li { border-left: 3px solid var(--accent); padding-left: .5rem; margin-bottom: .3rem; }

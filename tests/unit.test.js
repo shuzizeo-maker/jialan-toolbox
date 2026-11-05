@@ -161,3 +161,12 @@ test('stateOf', () => {
   assert.ok(isAdmin('approved', {role:'admin'}) && !isAdmin('suspended', {role:'admin'}));
   assert.ok(gateMessage('guest').title);
 });
+
+import { shouldShowOpening } from '../js/luckcard/opening-state.js';
+test('shouldShowOpening once per day, true on storage failure', () => {
+  const m = new Map(), s = { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) };
+  assert.equal(shouldShowOpening('20261105', s), true);
+  assert.equal(shouldShowOpening('20261105', s), false);
+  assert.equal(shouldShowOpening('20261106', s), true);
+  assert.equal(shouldShowOpening('20261105', { getItem(){ throw 1; }, setItem(){ throw 1; } }), true);
+});
