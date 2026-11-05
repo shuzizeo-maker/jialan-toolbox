@@ -158,6 +158,12 @@ test('uploader adds version v2 and edits content', async () => {
   await assertFails(b2.commit());
 });
 
+test('uploader syncs toolName/category on own versions only', async () => {
+  await assertSucceeds(updateDoc(doc(as('alice'), 'tools/t2/versions/v1'), { toolName: '新名稱', category: 'teaching' }));
+  await assertFails(updateDoc(doc(as('alice'), 'tools/t2/versions/v1'), { toolStatus: 'published' }));
+  await assertFails(updateDoc(doc(as('bob'), 'tools/t2/versions/v1'), { toolName: 'hack' }));
+});
+
 test('like must pair with +1 in same batch', async () => {
   const db = as('alice');
   await assertFails(setDoc(doc(db, 'tools/t1/likes/alice'), { createdAt: 1 }));

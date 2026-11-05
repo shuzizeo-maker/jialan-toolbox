@@ -131,7 +131,10 @@ service cloud.firestore {
           && vid == 'v' + string(newData().version)
           && newData().toolStatus == getAfter(toolPath(toolId)).data.status
           && str(newData().note, 1, 200) && str(newData().toolName, 1, 60) && validCategory(newData().category);
-        allow update: if isAdmin() && changed().hasOnly(['toolStatus', 'toolName', 'category']);
+        allow update: if (isAdmin() && changed().hasOnly(['toolStatus', 'toolName', 'category']))
+          || (isMember() && get(toolPath(toolId)).data.uploaderUid == uid()
+              && changed().hasOnly(['toolName', 'category'])
+              && str(newData().toolName, 1, 60) && validCategory(newData().category));
         allow delete: if isAdmin();
       }
 

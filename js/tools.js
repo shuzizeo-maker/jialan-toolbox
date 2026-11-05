@@ -85,3 +85,52 @@ export async function listFavorites(uid) {
   const tools = await Promise.all(favs.docs.map(f => getTool(f.id).catch(() => null)));
   return tools.filter(t => t && t.status === 'published');
 }
+
+import { writeBatch } from './fb-sdk.js';
+
+const cleanLinks = (l = {}) => ({
+  onlineUrl: (l.onlineUrl ?? '').trim(), downloadUrl: (l.downloadUrl ?? '').trim(), sourceUrl: (l.sourceUrl ?? '').trim(),
+});
+const cleanTool = t => ({
+  name: t.name.trim(), summary: t.summary.trim(), category: t.category,
+  author: t.author.trim(), authorGithub: (t.authorGithub ?? '').trim(),
+});
+
+/** 建立待審核工具（含網址與 v1），回傳新 id */
+export async function createTool(tool, links, note, uid) {
+  const ref = doc(collection(db, 'tools'));
+  const t = cleanTool(tool);
+  const b = writeBatch(db);
+  b.set(ref, { ...t, uploaderUid: uid, status: 'pending', likeCount: 0, currentVersion: 1,
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  b.set(doc(db, 'tools', ref.id, 'private', 'links'), cleanLinks(links));
+  b.set(doc(db, 'tools', ref.id, 'versions', 'v1'), { version: 1, note: note.trim() || '第一版上傳', createdAt: serverTimestamp(),
+    byUid: uid, toolName: t.name, category: t.category, toolStatus: 'pending' });
+  await b.commit();
+  return ref.id;
+}
+
+/** 交易：版本號 +1 並寫入 versions/v{n}；有給 links 就一併更新 */
+export async function addVersion(toolId, note, uid, links = null) {
+  const toolRef = doc(db, 'tools', toolId);
+  return runTransaction(db, async tx => {
+    const t = (await tx.get(toolRef)).data();
+    const n = t.currentVersion + 1;
+    tx.update(toolRef, { currentVersion: n, updatedAt: serverTimestamp() });
+    tx.set(doc(db, 'tools', toolId, 'versions', `v${n}`), { version: n, note: note.trim(), createdAt: serverTimestamp(),
+      byUid: uid, toolName: t.name, category: t.category, toolStatus: t.status });
+    if (links) tx.set(doc(db, 'tools', toolId, 'private', 'links'), cleanLinks(links));
+    return n;
+  });
+}
+
+/** 修改工具內容與網址；名稱或分類改變時同步更新各版本的冗餘欄位 */
+export async function updateTool(toolId, tool, links) {
+  const t = cleanTool(tool);
+  const vs = await getDocs(collection(db, 'tools', toolId, 'versions'));
+  const b = writeBatch(db);
+  b.update(doc(db, 'tools', toolId), { ...t, updatedAt: serverTimestamp() });
+  b.set(doc(db, 'tools', toolId, 'private', 'links'), cleanLinks(links));
+  vs.forEach(v => { if (v.data().toolName !== t.name || v.data().category !== t.category) b.update(v.ref, { toolName: t.name, category: t.category }); });
+  await b.commit();
+}

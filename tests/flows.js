@@ -87,6 +87,48 @@ flows.likeAndFavorite = async (b) => {
   for (const p of [g, m]) assert.deepEqual(p.errors, []);
 };
 
+flows.uploadFlow = async (b) => {
+  const evil = '<img src=x onerror=alert(1)>測試';
+  const alerts = [];
+  const u = await newPage(b);
+  u.on('dialog', d => { alerts.push(d.message()); d.dismiss(); });
+  await open(u, 'upload.html', 'alice@example.com');
+  await u.fill('[name=name]', evil);
+  await u.selectOption('[name=category]', 'teaching');
+  await u.fill('[name=summary]', '測試摘要');
+  await u.fill('[name=author]', '陳老師');
+  await u.fill('[name=onlineUrl]', 'http://x.com');
+  await u.click('button[type=submit]');
+  assert.match(await u.textContent('[data-error=onlineUrl]'), /https/);
+  await u.fill('[name=onlineUrl]', 'https://x.github.io/t/');
+  await u.click('button[type=submit]');
+  await u.waitForSelector('.success-box');
+  const toolHref = await u.getAttribute('.success-box a', 'href');
+
+  const a = await newPage(b);
+  a.on('dialog', d => { alerts.push(d.message()); d.accept(); });
+  await open(a, 'admin.html#tools', 'admin@example.com');
+  const card = a.locator('.admin-card', { hasText: '測試摘要' });
+  await card.waitFor();
+  assert.equal(await card.locator('.tool-name').textContent(), evil);
+  assert.equal(await a.locator('img[src=x]').count(), 0);
+  await card.locator('button', { hasText: '發布' }).click();
+  await card.waitFor({ state: 'detached' });
+
+  await u.goto(`${BASE}/${toolHref}`);
+  await u.click('a:has-text("新增版本")');
+  await u.waitForSelector('[name=note]');
+  await u.fill('[name=note]', '第二版修正');
+  await u.click('button[type=submit]');
+  await u.waitForSelector('.success-box');
+
+  await a.goto(`${BASE}/index.html`);
+  await a.waitForFunction(t => [...document.querySelectorAll('.feed li')].some(li => li.textContent.includes(t) && li.textContent.includes('v2')), evil);
+  assert.equal(await a.locator('img[src=x]').count(), 0);
+  assert.deepEqual(alerts, []);
+  for (const p of [u, a]) assert.deepEqual(p.errors, []);
+};
+
 const name = process.argv[2] ?? 'all';
 const list = name === 'all' ? Object.keys(flows) : [name];
 const b = await launch();
