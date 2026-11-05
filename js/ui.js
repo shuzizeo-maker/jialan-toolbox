@@ -30,6 +30,7 @@ export function errorBox(err, retry) {
   console.warn(err);
   const url = indexUrl(err);
   return h('div', { class: 'error-box' }, friendlyError(err),
+    err?.code ? h('small', { class: 'muted' }, `（代碼：${String(err.code).replace(/^firestore\//, '')}）`) : null,
     url ? h('a', { class: 'btn btn-small btn-primary', href: url, target: '_blank', rel: 'noopener noreferrer' }, '建立索引') : null,
     retry ? h('button', { class: 'btn btn-small', onclick: retry }, '重新整理') : null);
 }
