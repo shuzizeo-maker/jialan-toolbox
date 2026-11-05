@@ -194,3 +194,16 @@ test('buildAlbum', () => {
   assert.equal(a.byRarity.UR.owned, 1);
   assert.equal(buildAlbum([]).ownedCount, 0);
 });
+
+test('loadHolidays falls back when CDN returns an empty or unrecognised list', async () => {
+  const fallback = [{date:'20270101', week:'五', isHoliday:true, description:'開國紀念日'}];
+  for (const cdnBody of [[], [{ day: '20270101', holiday: true, name: 'x' }]]) {
+    const f = async url => url.startsWith('https://cdn') ? { ok: true, json: async () => cdnBody } : { ok: true, json: async () => fallback };
+    assert.equal((await loadHolidays(2027, f))[0]?.name, '開國紀念日');
+  }
+});
+test('firestore indexes include collection-group single-field index for versions.toolStatus', () => {
+  const cfg = JSON.parse(readFileSync(new URL('../firestore.indexes.json', import.meta.url)));
+  const o = cfg.fieldOverrides.find(f => f.collectionGroup === 'versions' && f.fieldPath === 'toolStatus');
+  assert.ok(o && o.indexes.some(i => i.queryScope === 'COLLECTION_GROUP' && i.order === 'ASCENDING'));
+});

@@ -41,10 +41,13 @@ service cloud.firestore {
         && newData().keys().hasOnly(['county', 'school', 'realName', 'jobTitle', 'email', 'displayName',
                                      'status', 'role', 'createdAt', 'updatedAt'])
         && newData().status == 'pending' && newData().role == 'user'
+        && newData().email == request.auth.token.email
+        && str(newData().displayName, 0, 100)
         && validProfile(newData());
       allow update: if
         (signedIn() && uid() == userId
           && changed().hasOnly(['county', 'school', 'realName', 'jobTitle', 'displayName', 'updatedAt'])
+          && str(newData().displayName, 0, 100)
           && validProfile(newData()))
         || (isAdmin()
           && changed().hasOnly(['status', 'role', 'updatedAt'])

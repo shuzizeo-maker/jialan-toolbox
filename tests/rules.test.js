@@ -48,7 +48,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'stats/site'), { memberCount: 3 });
   });
 });
-const as = uid => (uid ? env.authenticatedContext(uid) : env.unauthenticatedContext()).firestore();
+const as = (uid, token = { email: 'x@example.com' }) => (uid ? env.authenticatedContext(uid, token) : env.unauthenticatedContext()).firestore();
 
 test('guest reads published tool, not links', async () => {
   const db = as(null);
@@ -94,6 +94,14 @@ test('user creates own profile only as pending/user', async () => {
   await assertFails(setDoc(doc(db, 'users/other'), profile('pending')));
   await assertFails(setDoc(doc(db, 'users/newbie'), { ...profile('pending'), jobTitle: '工友' }));
   await assertSucceeds(setDoc(doc(db, 'users/newbie'), profile('pending')));
+});
+
+test('profile email must match the signed-in Google account', async () => {
+  const db = as('mallory', { email: 'mallory@example.com' });
+  await assertFails(setDoc(doc(db, 'users/mallory'), { ...profile('pending'), email: 'principal@school.edu.tw' }));
+  await assertFails(setDoc(doc(db, 'users/mallory'), { ...profile('pending'), email: 'mallory@example.com', displayName: 'x'.repeat(101) }));
+  await assertSucceeds(setDoc(doc(db, 'users/mallory'), { ...profile('pending'), email: 'mallory@example.com' }));
+  await assertFails(updateDoc(doc(db, 'users/mallory'), { displayName: 'y'.repeat(101) }));
 });
 
 test('user cannot change own status/role; can change realName', async () => {

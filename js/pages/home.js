@@ -75,15 +75,16 @@ if (!ready) {
     : h('p', { class: 'empty' }, '還沒有排行資料。'));
 
   fill(stats, async () => {
+    const soft = p => p.catch(e => { console.warn(e); return null; });
     const [tools, versions, site, pending] = await Promise.all([
-      countPublishedTools(), countPublishedVersions(),
+      countPublishedTools(), soft(countPublishedVersions()),
       getDoc(doc(db, 'stats/site')).then(d => d.data()?.memberCount ?? 0).catch(() => null),
       s.admin ? getCountFromServer(query(collection(db, 'users'), where('status', '==', 'pending'))).then(r => r.data().count) : null,
     ]);
     return { tools, versions, site, pending };
   }, v => h('ul', { class: 'stat-list' },
     h('li', '收錄工具', h('b', String(v.tools)), '個'),
-    h('li', '累計版本修正', h('b', String(v.versions)), '次'),
+    v.versions != null ? h('li', '累計版本修正', h('b', String(v.versions)), '次') : null,
     v.site != null ? h('li', '已審核會員', h('b', String(v.site)), '位') : null,
     v.pending != null ? h('li', h('a', { href: 'admin.html' }, '待審核會員'), h('b', String(v.pending)), '位') : null));
 

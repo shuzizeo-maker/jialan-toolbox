@@ -17,7 +17,9 @@ async function tryLoad(url, fetchFn, timeoutMs) {
   try {
     const res = await fetchFn(url, ctrl ? { signal: ctrl.signal } : undefined);
     if (!res || !res.ok) throw new Error('bad response');
-    return parseCalendar(await res.json());
+    const list = parseCalendar(await res.json());
+    if (list.length === 0) throw new Error('no holidays found');
+    return list;
   } finally { if (timer) clearTimeout(timer); }
 }
 
