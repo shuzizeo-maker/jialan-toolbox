@@ -215,3 +215,4 @@ table.rank td.likes { text-align: right; color: var(--danger); font-weight: 700;
 .form label.inline { display: flex; align-items: center; gap: .3rem; font-weight: 400; }
 .form label.inline input { width: auto; }
 .row-actions select { font: inherit; padding: .15rem .3rem; max-width: 100%; }
+.center { text-align: center; }

@@ -81,6 +81,12 @@ test('public queries: published tools, latest versions, counts', async () => {
   await assertSucceeds(getCountFromServer(query(collection(as('admin'), 'users'), where('status', '==', 'pending'))));
 });
 
+test('versions list follows parent tool visibility', async () => {
+  await assertSucceeds(getDocs(query(collection(as(null), 'tools/t1/versions'), orderBy('version', 'desc'), limit(50))));
+  await assertFails(getDocs(query(collection(as(null), 'tools/t2/versions'), limit(50))));
+  await assertSucceeds(getDocs(query(collection(as('alice'), 'tools/t2/versions'), limit(50))));
+});
+
 test('user creates own profile only as pending/user', async () => {
   const db = as('newbie');
   await assertFails(setDoc(doc(db, 'users/newbie'), profile('approved')));

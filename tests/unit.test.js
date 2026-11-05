@@ -170,3 +170,12 @@ test('shouldShowOpening once per day, true on storage failure', () => {
   assert.equal(shouldShowOpening('20261106', s), true);
   assert.equal(shouldShowOpening('20261105', { getItem(){ throw 1; }, setItem(){ throw 1; } }), true);
 });
+
+import { filterByKeyword } from '../js/tool-filter.js';
+test('filterByKeyword', () => {
+  const items = [{name:'校外教學小幫手', summary:'同意書', author:'A'}, {name:'Score', summary:'成績', author:'bob'}];
+  assert.equal(filterByKeyword(items, '  同意 ').length, 1);
+  assert.equal(filterByKeyword(items, 'BOB').length, 1);
+  assert.equal(filterByKeyword(items, '').length, 2);
+  assert.equal(filterByKeyword(items, null).length, 2);
+});

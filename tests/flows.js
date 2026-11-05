@@ -49,6 +49,44 @@ flows.profileAndApprove = async (b) => {
   for (const p of [u, a, g]) assert.deepEqual(p.errors, []);
 };
 
+flows.likeAndFavorite = async (b) => {
+  const g = await newPage(b);
+  await open(g, 'tool.html?id=field');
+  await g.waitForSelector('.gate-box');
+  assert.equal(await g.locator('a[href*="example.github.io"]').count(), 0);
+
+  const m = await newPage(b);
+  await open(m, 'tool.html?id=field', 'alice@example.com');
+  await m.waitForSelector('#btn-like');
+  assert.ok(await m.locator('a[href="https://example.github.io/field/"]').count() === 1);
+  const before = +(await m.textContent('#like-count'));
+  for (let i = 0; i < 5; i++) await m.click('#btn-like', { force: true, noWaitAfter: true }).catch(() => {});
+  await m.waitForFunction(() => !document.getElementById('btn-like').disabled);
+  await m.waitForTimeout(800);
+  const shown = +(await m.textContent('#like-count'));
+  assert.ok(shown === before || shown === before + 1, `shown ${shown} before ${before}`);
+  await m.reload();
+  await m.waitForSelector('#btn-like');
+  const liked = (await m.getAttribute('#btn-like', 'aria-pressed')) === 'true';
+  assert.equal(+(await m.textContent('#like-count')), before + (liked ? 1 : 0));
+
+  await m.click('#btn-fav');
+  await m.waitForFunction(() => document.getElementById('btn-fav').getAttribute('aria-pressed') === 'true');
+  await m.goto(`${BASE}/favorites.html`);
+  await m.waitForSelector('.tool-row');
+  assert.match(await m.textContent('.tool-row'), /校外教學文件小幫手/);
+
+  await m.goto(`${BASE}/tools.html?cat=student`);
+  await m.waitForSelector('.tool-row');
+  assert.equal(await m.locator('.tool-row').count(), 1);
+  await m.goto(`${BASE}/tools.html`);
+  await m.waitForSelector('.tool-row');
+  assert.equal(await m.locator('.tool-row').count(), 8);
+  await m.fill('#q', '採購');
+  assert.equal(await m.locator('.tool-row:visible').count(), 1);
+  for (const p of [g, m]) assert.deepEqual(p.errors, []);
+};
+
 const name = process.argv[2] ?? 'all';
 const list = name === 'all' ? Object.keys(flows) : [name];
 const b = await launch();

@@ -123,7 +123,7 @@ service cloud.firestore {
       }
 
       match /versions/{vid} {
-        allow read: if isAdmin() || (signedIn() && get(toolPath(toolId)).data.uploaderUid == uid());
+        allow read: if canReadTool(get(toolPath(toolId)).data);
         allow create: if canEditToolAfter(toolId)
           && newData().keys().hasOnly(['version', 'note', 'createdAt', 'byUid', 'toolName', 'category', 'toolStatus'])
           && newData().byUid == uid()
