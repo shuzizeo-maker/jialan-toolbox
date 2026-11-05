@@ -136,3 +136,28 @@ test('getGuestId survives throwing storage', () => {
   assert.equal(getGuestId(s), getGuestId(s));
   assert.notEqual(getGuestId(s), 'guest');
 });
+
+import { gateClick, stateOf, isMember, isAdmin, gateMessage } from '../js/gate.js';
+test('gateClick', () => {
+  assert.ok(gateClick('loading', 'member'));
+  assert.equal(gateClick('guest', 'member').action, 'login');
+  assert.equal(gateClick('noprofile', 'member').action, 'profile');
+  assert.ok(gateClick('pending', 'member').message.includes('審核中'));
+  assert.ok(gateClick('suspended', 'member').message.includes('停用'));
+  assert.equal(gateClick('approved', 'member'), null);
+  assert.ok(gateClick('approved', 'admin'));
+  assert.equal(gateClick('approved', 'admin', { role: 'admin', status: 'approved' }), null);
+  assert.equal(gateClick('guest', null), null);
+});
+test('stateOf', () => {
+  assert.equal(stateOf(undefined, undefined), 'loading');
+  assert.equal(stateOf({uid:'a'}, undefined), 'loading');
+  assert.equal(stateOf(null, null), 'guest');
+  assert.equal(stateOf({uid:'a'}, null), 'noprofile');
+  assert.equal(stateOf({uid:'a'}, {status:'approved'}), 'approved');
+  assert.equal(stateOf({uid:'a'}, {status:'pending'}), 'pending');
+  assert.equal(stateOf({uid:'a'}, {status:'weird'}), 'suspended');
+  assert.ok(isMember('approved') && !isMember('pending'));
+  assert.ok(isAdmin('approved', {role:'admin'}) && !isAdmin('suspended', {role:'admin'}));
+  assert.ok(gateMessage('guest').title);
+});
