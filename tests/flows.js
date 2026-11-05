@@ -5,6 +5,14 @@ import { seed } from './seed.js';
 
 const flows = {};
 
+/** 等 #who 變成指定文字；途中頁面自行重新整理也沒關係 */
+async function waitText(page, text, tries = 5) {
+  for (let i = 0; i < tries; i++) {
+    try { await page.waitForFunction(t => document.getElementById('who')?.textContent === t, text, { timeout: 8000 }); return; }
+    catch (e) { if (i === tries - 1) throw e; await page.waitForTimeout(300); }
+  }
+}
+
 flows.profileAndApprove = async (b) => {
   const u = await newPage(b);
   u.on('dialog', d => d.accept());
@@ -32,8 +40,8 @@ flows.profileAndApprove = async (b) => {
   await card.locator('button', { hasText: '通過' }).click();
   await a.locator('.admin-card', { hasText: '新老師' }).waitFor({ state: 'detached' });
 
-  await u.reload();
-  await u.waitForFunction(() => document.getElementById('who')?.textContent === '新老師（教師）');
+  // 審核通過後頁面會自動重新整理
+  await waitText(u, '新老師（教師）');
   const g = await newPage(b);
   await open(g, 'admin.html', 'alice@example.com');
   await g.waitForSelector('.gate-box');

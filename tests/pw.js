@@ -25,12 +25,15 @@ export async function newPage(browser, { width = 1280, height = 900, scale = 1 }
 
 /** 以 Emulator 帳號登入（email 為 null 表示訪客） */
 export async function open(page, path, email = null) {
-  await page.goto(`${BASE}/${path}${path.includes('?') ? '&' : '?'}emu`);
   if (email) {
+    // 在不會自動重新整理的 profile 頁登入，避免與目標頁的狀態重載互相干擾
+    await page.goto(`${BASE}/profile.html?emu`);
     await page.waitForFunction(() => window.__emuSignIn);
     await page.evaluate(e => window.__emuSignIn(e), email);
     await page.waitForFunction(() => !['訪客', '…'].includes(document.getElementById('who')?.textContent));
     await page.goto(`${BASE}/${path}`);
+  } else {
+    await page.goto(`${BASE}/${path}${path.includes('?') ? '&' : '?'}emu`);
   }
   await page.waitForFunction(() => document.getElementById('who') && document.getElementById('who').textContent !== '…');
 }
