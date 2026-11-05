@@ -71,3 +71,7 @@
 @keyframes lc-spin { to { rotate: 360deg; } }
 @keyframes lc-rise { 10% { opacity: 1; } 100% { transform: translateY(-110vh) scale(.4); opacity: 0; } }
 @media (max-width: 360px) { .lc-flip { transform: scale(.9); } }
+/* 卡冊：剪影與已收集卡同高 */
+.album-grid .lc { min-height: 186px; display: flex; }
+.album-grid .lc-inner { flex: 1; }
+.lc-unknown .lc-art { flex: 1; }

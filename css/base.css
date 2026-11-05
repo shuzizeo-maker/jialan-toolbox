@@ -237,3 +237,6 @@ table.rank td.likes { text-align: right; color: var(--danger); font-weight: 700;
 .album-cell .lc { transition: transform .2s; }
 .album-count { position: absolute; top: -6px; right: -6px; background: var(--danger); color: #fff; border-radius: 999px; padding: 0 .4rem; font-size: .8rem; font-weight: 700; }
 @media (max-width: 768px) { .album-grid { grid-template-columns: repeat(2, 1fr); } .wish-row { flex-direction: column; } }
+.help-sec { border-top: 1px dotted var(--line); padding-top: .4rem; margin-top: .8rem; }
+.help-sec h3 { color: var(--banner); margin: .3rem 0; }
+.help-sec table.rank { max-width: 420px; }
