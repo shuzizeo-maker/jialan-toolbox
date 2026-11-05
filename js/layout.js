@@ -73,7 +73,7 @@ function banner() {
   const fs = store.get('jl_fs') || 'm';
   return h('header', { class: 'banner' },
     h('a', { class: 'brand', href: 'index.html' },
-      h('span', { class: 'logo', 'aria-hidden': 'true' }, h('span', '嘉'), h('i', '🛠️')),
+      h('span', { class: 'logo' }, h('img', { src: './assets/logo.png', alt: '嘉蘭國小校徽', width: '64', height: '64' })),
       h('span', { class: 'brand-text' },
         h('strong', '嘉蘭國小教學行政工具庫'),
         h('small', '好用的工具大家分享，準時下班不是夢'))),

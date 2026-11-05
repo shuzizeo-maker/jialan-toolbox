@@ -20,9 +20,9 @@ button { font: inherit; cursor: pointer; }
   display: flex; align-items: center; gap: 1rem; padding: .6rem 1.2rem; position: relative; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: .8rem; color: #fff; text-decoration: none; }
 .brand:hover { color: #fff; }
-.logo { position: relative; width: 58px; height: 58px; border-radius: 14px; background: #fff; color: var(--banner);
-  display: grid; place-items: center; font-weight: 900; font-size: 2rem; box-shadow: 0 2px 0 #0003; border: 3px solid #ffd27a; }
-.logo i { position: absolute; right: -10px; bottom: -8px; font-style: normal; font-size: 1.3rem; }
+.logo { width: 62px; height: 62px; border-radius: 50%; background: #fff; padding: 0; overflow: hidden; flex: none;
+  box-shadow: 0 2px 0 #0003; border: 3px solid #ffd27a; display: grid; place-items: center; }
+.logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .brand-text { display: flex; flex-direction: column; }
 .brand-text strong { font-size: 1.75rem; letter-spacing: .08em; text-shadow: 0 2px 0 #0004; }
 .brand-text small { opacity: .9; font-weight: 700; letter-spacing: .05em; }
@@ -185,7 +185,7 @@ table.rank td.likes { text-align: right; color: var(--danger); font-weight: 700;
   .banner { padding: .5rem 16px; }
   .brand-text strong { font-size: 1.2rem; letter-spacing: .02em; }
   .brand-text small { font-size: .75rem; }
-  .logo { width: 44px; height: 44px; font-size: 1.5rem; }
+  .logo { width: 46px; height: 46px; }
   .fs-switch span { display: none; }
   .fs-btn { width: 1.8rem; height: 1.8rem; }
   .navbar { padding: .35rem 16px; gap: .5rem; }
