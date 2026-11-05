@@ -6,9 +6,9 @@
 - 本機開發：`npm install` → `npm run emu`（另一視窗）→ `node tests/seed.js` → `npm run serve` → 開啟 http://localhost:5500/?emu
 - 測試：`npm run test:unit`、`npm run test:rules`
 
-## 國定假日備援資料（需人工核對）
+## 國定假日備援資料
 
-`data/holidays-2026.json`、`data/holidays-2027.json` 是在無法連網核對的情況下整理的，網站平常會優先讀取線上的 TaiwanCalendar 資料，只有讀不到時才用這兩個檔案。
+`data/holidays-2026.json`、`data/holidays-2027.json` 依人事行政總處公告的辦公日曆表整理，網站平常會優先讀取線上的 TaiwanCalendar 資料，只有讀不到時才用這兩個檔案。
 
-- 2026（115 年）：依 115 年辦公日曆表整理，請對照人事行政總處公告核對一次。
+- 2026（115 年）：已對照人事行政總處公告的 115 年辦公日曆表核對無誤。
 - 2027（116 年）：已依人事行政總處公告的 116 年辦公日曆表更新，含補假。
