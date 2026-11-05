@@ -56,7 +56,7 @@ export function showOpening(result, dateKey) {
     const special = ['SSR', 'UR'].includes(result.card.rarity);
     const face = renderCard(result, { dateKey });
     const flip = h('div', { class: 'lc-flip', role: 'button', tabindex: '0', 'aria-label': '點擊翻開今日好運卡' },
-      h('div', { class: 'lc-back' }, h('span', { class: 'lc-back-logo' }, '嘉'), h('small', '今日好運卡'), h('em', '點擊翻開')),
+      h('div', { class: 'lc-back' }, h('span', { class: 'lc-back-logo' }, h('img', { src: './assets/logo.png', alt: '嘉蘭國小校徽' })), h('small', '今日好運卡'), h('em', '點擊翻開')),
       h('div', { class: 'lc-front' }, face));
     const hint = h('p', { class: 'lc-hint' }, '點一下卡片翻開今天的運勢！');
     const close = () => { document.removeEventListener('keydown', onKey); ov.remove(); resolve(); };
